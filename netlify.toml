@@ -1,0 +1,10 @@
+# Netlify configuration for Byline
+
+[build]
+  # The whole site is static; the only "backend" is the edge function below.
+  publish = "."
+
+# Route the edge function. The frontend POSTs to /api/generate.
+[[edge_functions]]
+  path = "/api/generate"
+  function = "generate"

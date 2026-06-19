@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Byline — Guest Post Drafts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js" defer></script>
+<style>
+  :root{
+    --paper:#F7F8F9; --card:#FFFFFF; --ink:#14161B; --body:#41454D; --muted:#8A8F99;
+    --line:#E6E8EC; --accent:#2D2BD4; --accent-press:#2421B0; --ok:#16906E; --warn:#C8442B;
+    --highlight:#FFE27A;
+    --ui:"Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --sans:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --serif:"Spectral", Georgia, "Times New Roman", serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper); color:var(--body); font-family:var(--sans);
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+    padding:0 20px 80px;
+  }
+  .wrap{max-width:768px;margin:0 auto}
+
+  /* Masthead */
+  .masthead{display:flex;align-items:center;gap:12px;padding:40px 0 28px}
+  .mark{
+    width:30px;height:30px;border-radius:8px;background:var(--accent);
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .mark .caret{width:2px;height:15px;background:#fff;border-radius:1px;animation:blink 1.15s steps(1) infinite}
+  .wordmark{font-family:var(--ui);font-weight:700;font-size:20px;letter-spacing:-.01em;color:var(--ink)}
+  .tag{font-family:var(--ui);font-weight:400;font-size:13.5px;color:var(--muted);margin-left:auto;text-align:right}
+  @media (max-width:560px){.tag{display:none}}
+
+  /* Card + composer */
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:26px 24px;box-shadow:0 1px 2px rgba(20,22,27,.04),0 12px 28px rgba(20,22,27,.05);
+  }
+  .eyebrow{
+    font-family:var(--ui);font-weight:600;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);margin:0 0 18px
+  }
+  .field{margin-bottom:18px}
+  .field label{
+    display:block;font-family:var(--ui);font-weight:500;font-size:13.5px;color:var(--ink);margin-bottom:7px
+  }
+  .optional{font-family:var(--ui);font-weight:400;font-size:11px;color:var(--muted);text-transform:lowercase;letter-spacing:0}
+  input[type=text],input[type=password],select{
+    width:100%;font-family:var(--sans);font-size:15px;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 13px;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input::placeholder{color:#B6BAC2}
+  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,43,212,.12)}
+  .help{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+  .row{display:flex;gap:14px}
+  .row .field{flex:1;margin-bottom:18px}
+  @media (max-width:520px){.row{flex-direction:column;gap:0}}
+
+  .btn-primary{
+    appearance:none;border:none;cursor:pointer;width:100%;
+    font-family:var(--ui);font-weight:600;font-size:15px;color:#fff;background:var(--accent);
+    border-radius:10px;padding:13px 16px;margin-top:4px;
+    transition:transform .12s ease, background .15s ease;
+  }
+  .btn-primary:hover{background:var(--accent-press);transform:translateY(-1px)}
+  .btn-primary:active{transform:translateY(0)}
+  .btn-primary:disabled{opacity:.55;cursor:default;transform:none}
+  .form-error{color:var(--warn);font-size:13.5px;margin:14px 0 0;font-family:var(--sans)}
+
+  /* Status */
+  .status{display:flex;align-items:center;gap:11px;margin-top:24px;color:var(--body);font-family:var(--ui);font-size:14px}
+  .spinner{width:15px;height:15px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex:none}
+
+  /* Result */
+  .result{margin-top:28px}
+  .diag{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .pill{
+    font-family:var(--ui);font-weight:500;font-size:12px;letter-spacing:.01em;
+    border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;color:var(--body);
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+  .pill.ok .dot{background:var(--ok)} .pill.ok{color:var(--ok);border-color:rgba(22,144,110,.3)}
+  .pill.warn .dot{background:var(--warn)} .pill.warn{color:var(--warn);border-color:rgba(200,68,43,.3)}
+
+  .live-wrap{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px 26px}
+  .live{
+    font-family:var(--serif);font-size:16px;line-height:1.7;color:var(--ink);
+    white-space:pre-wrap;word-wrap:break-word;
+  }
+  .live.writing::after{content:"";display:inline-block;width:2px;height:1.05em;background:var(--accent);
+    margin-left:2px;vertical-align:-2px;animation:blink 1.15s steps(1) infinite}
+
+  /* Rendered article sheet */
+  .sheet{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:34px 38px;font-family:var(--serif);color:var(--ink);
+    box-shadow:0 1px 2px rgba(20,22,27,.04),0 12px 28px rgba(20,22,27,.05);
+  }
+  @media (max-width:520px){.sheet{padding:26px 22px}}
+  .sheet h1{font-size:27px;line-height:1.2;font-weight:600;margin:0 0 18px;letter-spacing:-.01em}
+  .sheet h2{font-size:21px;line-height:1.25;font-weight:600;margin:30px 0 12px}
+  .sheet h3{font-size:17px;line-height:1.3;font-weight:600;margin:22px 0 9px}
+  .sheet p{font-size:16.5px;line-height:1.72;margin:0 0 16px}
+  .sheet ul,.sheet ol{margin:0 0 16px;padding-left:22px}
+  .sheet li{font-size:16.5px;line-height:1.7;margin:0 0 7px}
+  .sheet a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+  .sheet a:hover{color:var(--accent-press)}
+  .sheet table{border-collapse:collapse;width:100%;margin:0 0 18px;font-family:var(--sans);font-size:14.5px}
+  .sheet th,.sheet td{border:1px solid var(--line);padding:9px 12px;text-align:left}
+  .sheet th{background:#FAFBFC;font-weight:600;color:var(--ink)}
+  .sheet blockquote{margin:0 0 16px;padding:4px 0 4px 18px;border-left:3px solid var(--line);color:var(--body);font-style:italic}
+  .sheet code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;background:#F2F3F5;padding:1px 5px;border-radius:5px}
+
+  .result-bar{display:flex;align-items:center;gap:14px;margin-top:16px;flex-wrap:wrap}
+  .btn-ghost{
+    appearance:none;cursor:pointer;font-family:var(--ui);font-weight:500;font-size:13.5px;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 14px;transition:border-color .15s,background .15s
+  }
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .reminder{font-size:12.5px;color:var(--muted)}
+
+  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:48px;font-family:var(--ui)}
+
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="mark"><span class="caret"></span></div>
+    <div class="wordmark">Byline</div>
+    <div class="tag">Guest-post drafts, sourced and ready to edit.</div>
+  </header>
+
+  <main>
+    <section class="composer card">
+      <p class="eyebrow">What to write</p>
+
+      <div class="field">
+        <label for="topic">Topic</label>
+        <input id="topic" type="text" autocomplete="off"
+          placeholder="e.g. How offline-first design improves mobile app retention" />
+      </div>
+
+      <div class="field">
+        <label for="keyword">Target keyword</label>
+        <input id="keyword" type="text" autocomplete="off"
+          placeholder="e.g. offline-first mobile apps" />
+        <p class="help">Fill either field, or both. When you add a keyword, it lands in the first 30% of the draft.</p>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="length">Length</label>
+          <select id="length">
+            <option value="600-800">600–800 words</option>
+            <option value="800-1000" selected>800–1000 words</option>
+            <option value="1000-1200">1000–1200 words</option>
+            <option value="1200-1500">1200–1500 words</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="code">Access code <span class="optional">optional</span></label>
+          <input id="code" type="password" autocomplete="off" placeholder="If your team set one" />
+        </div>
+      </div>
+
+      <button id="go" class="btn-primary">Write the draft</button>
+      <p id="formError" class="form-error" hidden></p>
+    </section>
+
+    <section id="status" class="status" hidden>
+      <span class="spinner"></span>
+      <span id="statusText">Reading the brief</span>
+    </section>
+
+    <section id="result" class="result" hidden>
+      <div class="diag" id="diag"></div>
+      <div class="live-wrap" id="liveWrap" hidden>
+        <div class="live writing" id="live"></div>
+      </div>
+      <article class="sheet" id="sheet" hidden></article>
+      <div class="result-bar" id="resultBar" hidden>
+        <button id="copy" class="btn-ghost">Copy markdown</button>
+        <span class="reminder">Draft only. Run it through your AI checker and edit before publishing.</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>Byline · drafts are a starting point, not a finished post</footer>
+</div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const go = $("go"), topic = $("topic"), keyword = $("keyword"),
+        lengthSel = $("length"), code = $("code"),
+        formError = $("formError"), statusEl = $("status"), statusText = $("statusText"),
+        result = $("result"), diag = $("diag"), liveWrap = $("liveWrap"), live = $("live"),
+        sheet = $("sheet"), resultBar = $("resultBar"), copyBtn = $("copy");
+
+  const STATUS_MESSAGES = [
+    "Reading the brief",
+    "Researching current sources",
+    "Checking the facts",
+    "Drafting the article",
+    "Tightening the rhythm"
+  ];
+  let statusTimer = null, rawMarkdown = "";
+
+  function startStatusCycle(){
+    let i = 0;
+    statusText.textContent = STATUS_MESSAGES[0];
+    statusEl.hidden = false;
+    statusTimer = setInterval(() => {
+      i = (i + 1) % STATUS_MESSAGES.length;
+      statusText.textContent = STATUS_MESSAGES[i];
+    }, 2600);
+  }
+  function stopStatusCycle(){
+    if(statusTimer){ clearInterval(statusTimer); statusTimer = null; }
+    statusEl.hidden = true;
+  }
+
+  function setBusy(busy){
+    go.disabled = busy;
+    go.textContent = busy ? "Writing…" : "Write the draft";
+  }
+
+  function showError(msg){
+    formError.textContent = msg;
+    formError.hidden = false;
+  }
+  function clearError(){ formError.hidden = true; formError.textContent = ""; }
+
+  function renderMarkdown(md){
+    let html;
+    if (window.marked && typeof window.marked.parse === "function"){
+      html = window.marked.parse(md, { breaks:true });
+    } else {
+      html = fallbackMd(md);
+    }
+    if (window.DOMPurify && typeof window.DOMPurify.sanitize === "function"){
+      html = window.DOMPurify.sanitize(html, { ADD_ATTR:["target","rel"] });
+    }
+    sheet.innerHTML = html;
+    sheet.querySelectorAll("a").forEach(a => {
+      a.setAttribute("target","_blank");
+      a.setAttribute("rel","noopener noreferrer");
+    });
+  }
+
+  // Minimal fallback if the CDN markdown lib fails to load.
+  function fallbackMd(md){
+    const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const lines = md.split("\n");
+    let out = "", inList = false;
+    const inline = t => esc(t)
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2">$1</a>')
+      .replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>")
+      .replace(/\*([^*]+)\*/g,"<em>$1</em>");
+    for (let line of lines){
+      const h = line.match(/^(#{1,3})\s+(.*)$/);
+      const li = line.match(/^\s*[-*]\s+(.*)$/);
+      if (h){
+        if(inList){out+="</ul>";inList=false;}
+        out += "<h"+h[1].length+">"+inline(h[2])+"</h"+h[1].length+">";
+      } else if (li){
+        if(!inList){out+="<ul>";inList=true;}
+        out += "<li>"+inline(li[1])+"</li>";
+      } else if (line.trim() === ""){
+        if(inList){out+="</ul>";inList=false;}
+      } else {
+        if(inList){out+="</ul>";inList=false;}
+        out += "<p>"+inline(line)+"</p>";
+      }
+    }
+    if(inList) out+="</ul>";
+    return out;
+  }
+
+  function buildDiag(md, kw){
+    const text = md.replace(/\[([^\]]+)\]\([^)]+\)/g,"$1"); // strip link URLs for counting
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    const wc = words.length;
+    const mins = Math.max(1, Math.round(wc / 225));
+
+    let pills = "";
+    pills += pill(wc + " words", wc >= 600 ? "ok" : "warn");
+    pills += pill("~" + mins + " min read", "");
+
+    if (kw){
+      const cut = Math.max(1, Math.ceil(words.length * 0.3));
+      const head = words.slice(0, cut).join(" ").toLowerCase();
+      const hit = head.includes(kw.toLowerCase());
+      pills += pill(hit ? "Keyword in first 30%" : "Keyword NOT in first 30%", hit ? "ok" : "warn");
+    }
+    diag.innerHTML = pills;
+  }
+  function pill(label, state){
+    const cls = state ? " " + state : "";
+    return '<span class="pill'+cls+'"><span class="dot"></span>'+label+'</span>';
+  }
+
+  async function generate(){
+    clearError();
+    const payload = {
+      topic: topic.value.trim(),
+      keyword: keyword.value.trim(),
+      wordCount: lengthSel.value,
+      accessCode: code.value
+    };
+    if(!payload.topic && !payload.keyword){
+      showError("Enter a topic, a keyword, or both.");
+      return;
+    }
+
+    setBusy(true);
+    result.hidden = true;
+    sheet.hidden = true; resultBar.hidden = true; liveWrap.hidden = true;
+    diag.innerHTML = ""; sheet.innerHTML = ""; live.textContent = "";
+    rawMarkdown = "";
+    startStatusCycle();
+
+    let res;
+    try{
+      res = await fetch("/api/generate", {
+        method:"POST",
+        headers:{ "content-type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+    }catch(e){
+      stopStatusCycle(); setBusy(false);
+      showError("Could not reach the server. Check your connection and try again.");
+      return;
+    }
+
+    if(!res.ok || !res.body){
+      stopStatusCycle(); setBusy(false);
+      let msg = "Something went wrong. Try again.";
+      try{ const j = await res.json(); if(j && j.error) msg = j.error; if(j && j.detail) console.error(j.detail); }catch(_){}
+      showError(msg);
+      return;
+    }
+
+    // Stream the draft in.
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let firstChunk = true;
+
+    try{
+      while(true){
+        const { done, value } = await reader.read();
+        if(done) break;
+        const chunk = decoder.decode(value, { stream:true });
+        if(!chunk) continue;
+        if(firstChunk){
+          firstChunk = false;
+          stopStatusCycle();
+          result.hidden = false;
+          liveWrap.hidden = false;
+        }
+        rawMarkdown += chunk;
+        live.textContent = rawMarkdown;
+        live.scrollIntoView({ block:"end", behavior:"smooth" });
+      }
+    }catch(e){
+      stopStatusCycle(); setBusy(false);
+      if(!rawMarkdown){ showError("The draft stream was interrupted. Try again."); return; }
+    }
+
+    stopStatusCycle();
+    setBusy(false);
+
+    if(!rawMarkdown.trim()){
+      showError("No draft came back. Try again, or rephrase the topic.");
+      return;
+    }
+
+    // Finalize: swap live text for rendered article + diagnostics.
+    live.classList.remove("writing");
+    liveWrap.hidden = true;
+    renderMarkdown(rawMarkdown.trim());
+    buildDiag(rawMarkdown, payload.keyword);
+    sheet.hidden = false;
+    resultBar.hidden = false;
+  }
+
+  go.addEventListener("click", generate);
+  [topic, keyword, code].forEach(el => {
+    el.addEventListener("keydown", e => { if(e.key === "Enter") generate(); });
+  });
+
+  copyBtn.addEventListener("click", async () => {
+    try{
+      await navigator.clipboard.writeText(rawMarkdown.trim());
+      const prev = copyBtn.textContent;
+      copyBtn.textContent = "Copied";
+      setTimeout(() => { copyBtn.textContent = prev; }, 1400);
+    }catch(_){
+      showError("Copy failed. Select the text manually.");
+    }
+  });
+})();
+</script>
+</body>
+</html>

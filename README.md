@@ -13,7 +13,7 @@ byline-gp-writer/
 ├── index.html                      # the whole frontend (UI + streaming logic)
 ├── netlify.toml                    # config + route for the edge function
 ├── netlify/edge-functions/
-│   └── generate.js                 # calls Claude, runs web search, streams the draft
+│   └── netlify/edge-functions/generate.js                 # calls Claude, runs web search, streams the draft
 └── README.md
 ```
 
